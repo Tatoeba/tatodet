@@ -20,3 +20,34 @@ Models implemented
  - Beta with freq priors
  - Beta with Poisson priors
 
+Webapi
+---
+
+Make sure the model is built:
+
+
+```sh
+python3 build_model.py
+```
+
+To run the webapi:
+
+```sh
+python3 api.py
+```
+
+then send a query:
+
+
+```sh
+curl -X GET "http://localhost:8080/v1/det?sent=what+is+it&trials=20"
+```
+
+Tests
+---
+
+To run tests:
+
+```sh
+python3 -m pytest
+```
