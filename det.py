@@ -24,19 +24,19 @@ def plt_hist(pt, rng=[0, 1]):
 def new_dct(flr=0.5, mx=1000):
     return ddict(lambda: ddict(lambda : np.array([flr, mx-flr])))
 
-def vec(snt):
-    v = cvec(ngram_range=(3, 3), analyzer='char')
+def vec(snt, ngm=(1, 3)):
+    v = cvec(ngram_range=ngm, analyzer='char')
     tgm = v.fit_transform(snt)
     nm = v.get_feature_names()
     return v, tgm, nm
 
-def get_tgms_frq(snt):
-    v, tgm, nm = vec(snt)
+def get_tgms_frq(snt, vct=vec):
+    v, tgm, nm = vct(snt)
     aps = tgm.sum(axis=0)
     return nm, aps
 
-def get_tgms_cnt(snt):
-    v, tgm, nm = vec(snt)
+def get_tgms_cnt(snt, vct=vec):
+    v, tgm, nm = vct(snt)
     tgm[tgm > 1] = 1
     aps = tgm.sum(axis=0)
     return nm, aps
@@ -45,7 +45,8 @@ def get_abs(nm, aps, dct, lang, mx=1000):
     aps = np.array(aps.astype(float))
     for tg, ap in zip(nm, aps.T):
         a = ap[0] + 1
-        dct[lang][tg] = np.array([a, mx-a])
+        b = mx-a if (mx-a) >= 1 else 1
+        dct[lang][tg] = np.array([a, b])
     return dct
 
 
@@ -60,7 +61,7 @@ def mdl_pbeta(ab, n=1):
     a, b = ab[:, 0], ab[:, 1]
     ap, bp = pm.Poisson.dist(a), pm.Poisson.dist(b)
     a_, b_ = ap.random(size=n), bp.random(size=n)
-    bt = pm.Beta.dist(alpha=a_+0.5, beta=b_)
+    bt = pm.Beta.dist(alpha=a_+0.5, beta=b_+1)
     probs = bt.random(size=1)
     probs = probs.reshape((n, -1))
     return probs
@@ -72,8 +73,8 @@ def norm(cnt):
 
 upr = norm(np.ones(len(langs)))
 
-def predict(snt, dct, prior=upr, n=1, mdl=mdl_pbeta):
-    v, tgm, nm = vec([snt])
+def predict(snt, dct, prior=upr, n=1, mdl=mdl_pbeta, vct=vec):
+    v, tgm, nm = vct([snt])
 
     lng_pb = []
     for idx, lang in enumerate(langs):
@@ -135,7 +136,7 @@ def load_lng(lng, fl='./data/%s_1000.csv'):
 
 
 
-def build_mdl(langs=langs, fl='./data/%s_1000.csv'):
+def build_mdl(langs=langs, fl='./data/%s_1000.csv', vct=vec):
     mx_lng = {}
     snt_lng = {}
     dct_lng = new_dct()
@@ -144,7 +145,7 @@ def build_mdl(langs=langs, fl='./data/%s_1000.csv'):
         snt_lng[lg] = snt
         mx_lng[lg] = len(snt)
 
-        tg_nm, aps = get_tgms_frq(snt)
+        tg_nm, aps = get_tgms_frq(snt, vct=vct)
         dct_lng = get_abs(tg_nm, aps, dct_lng, lg, mx=mx_lng[lg])
 
     return dct_lng, snt_lng, mx_lng
@@ -164,15 +165,16 @@ def upd_mdl(dct, ndct, lng, mx=1000):
     for k, v in ndct[lng].items(): 
         o_ap = dct[lng][k] 
         n_ap = v 
-        ap = n_ap[0] + o_ap[0] 
-        dct[lng][k] = np.array([ap, mx-ap]) 
+        a = n_ap[0] + o_ap[0] 
+        b = mx-a if (mx-a) >= 1 else 1
+        dct[lng][k] = np.array([a, b]) 
  
     return dct 
 
 try:
-    dct_lng = load_mdl()
+    dct_lng = load_mdl('model_ubt.pkl')
     print('loading existing model')
-except e:
+except:
     print('building and saving new model')
     dct_lng, snt_lng, mx_lng = build_mdl()
     save_mdl(dct_lng)

@@ -1,5 +1,6 @@
 from bottle import route, run, request
 from det import predict, predict_lg, mdl_pbeta, mdl_beta, load_mdl
+from benchmark import v
 import numpy as np
 
 pred_dct = {
@@ -33,11 +34,14 @@ def det():
     tr = int(q.get('trials', 10))
     assert tr >=1 and tr <= 100, 'trials must be between 1 and 100'
 
+    n1, n2 = q.get('ngram', '1,3').split(',')
+    ngm = (int(n1), int(n2))
+
     sent = q.get('sent', '')
     assert len(sent) > 3, 'sent must be greater than 3 chars'
 
 
-    res = pred(sent, dct, mdl=mdl, n=tr)
+    res = pred(sent, dct, mdl=mdl, n=tr, vct=v(*ngm))
     d['lang'] = res[0]
     if ver:
         d['verbose'] = str(res)
