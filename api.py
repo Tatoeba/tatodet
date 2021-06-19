@@ -13,7 +13,7 @@ mdl_dct = {
     1: mdl_beta
 }
 
-dct = load_mdl()
+dct = load_mdl('model_ubt.pkl')
 
 @route('/v1/det', method='GET')
 def det():
@@ -38,7 +38,7 @@ def det():
     ngm = (int(n1), int(n2))
 
     sent = q.get('sent', '')
-    assert len(sent) > 3, 'sent must be greater than 3 chars'
+    #assert len(sent) > 3, 'sent must be greater than 3 chars'
 
 
     res = pred(sent, dct, mdl=mdl, n=tr, vct=v(*ngm))

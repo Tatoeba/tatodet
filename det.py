@@ -92,8 +92,8 @@ def predict(snt, dct, prior=upr, n=1, mdl=mdl_pbeta, vct=vec):
 
     return langs[pred], (pred, preds, (vs, cs), lng_pb, pr, pb)
     
-def predict_lg(snt, dct, prior=upr, n=1, mdl=mdl_pbeta):
-    v, tgm, nm = vec([snt])
+def predict_lg(snt, dct, prior=upr, n=1, mdl=mdl_pbeta, vct=vec):
+    v, tgm, nm = vct([snt])
 
     lng_pb = []
     for idx, lang in enumerate(langs):
@@ -171,10 +171,3 @@ def upd_mdl(dct, ndct, lng, mx=1000):
  
     return dct 
 
-try:
-    dct_lng = load_mdl('model_ubt.pkl')
-    print('loading existing model')
-except:
-    print('building and saving new model')
-    dct_lng, snt_lng, mx_lng = build_mdl()
-    save_mdl(dct_lng)
